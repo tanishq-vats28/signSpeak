@@ -14,8 +14,8 @@ function Menu() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/info" element={<InfoPage />} />
-          <Route path="/user" element={<User />} />
           <Route path="/team" element={<TeamPage />} />
+          <Route path="/user" element={<User />} />
         </Routes>
       </div>
       <Footer />
