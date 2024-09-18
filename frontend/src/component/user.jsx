@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import axios from "axios";
+import Cookies from "js-cookie";
 
 function User() {
   const [isSignup, setIsSignup] = useState(false);
@@ -6,10 +8,12 @@ function User() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState({});
+  const [message, setMessage] = useState("");
 
   const handleSwitchMode = () => {
     setIsSignup(!isSignup);
     setErrors({});
+    setMessage("");
   };
 
   const validateForm = () => {
@@ -35,10 +39,64 @@ function User() {
     return Object.keys(formErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log("Form submitted successfully");
+      const endpoint = isSignup ? "/signup" : "/login";
+      const data = isSignup
+        ? { username, email, password }
+        : { email, password };
+
+      try {
+        // Signup process
+        const response = await axios.post(
+          `http://127.0.0.1:5000${endpoint}`,
+          JSON.stringify(data),
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        setMessage(response.data.message);
+        setErrors({});
+
+        if (isSignup) {
+          // Automatically login after signup
+          const loginData = { email, password };
+          const loginResponse = await axios.post(
+            "http://127.0.0.1:5000/login",
+            JSON.stringify(loginData),
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          Cookies.set("user", JSON.stringify(loginResponse.data.user), {
+            expires: 1,
+            secure: true,
+          });
+          // Redirect to dashboard
+          window.location.href = "http://localhost:5173/dashboard";
+        } else {
+          // If it's a login request
+          Cookies.set("user", JSON.stringify(response.data.user), {
+            expires: 1,
+            secure: true,
+          });
+          // Redirect to dashboard
+          window.location.href = "http://localhost:5173/dashboard";
+        }
+      } catch (error) {
+        if (error.response) {
+          setErrors({ server: error.response.data.error });
+        } else {
+          setErrors({ server: "Something went wrong!" });
+        }
+      }
     }
   };
 
@@ -75,16 +133,12 @@ function User() {
                 type="email"
                 className="form-control"
                 id="exampleInputEmail1"
-                aria-describedby="emailHelp"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
               {errors.email && (
                 <span className="text-danger">{errors.email}</span>
               )}
-              <div id="emailHelp" className="form-text">
-                We'll never share your email with anyone else.
-              </div>
             </div>
             <div className="mb-3">
               <label htmlFor="exampleInputPassword1" className="form-label">
@@ -105,6 +159,8 @@ function User() {
               {isSignup ? "Signup" : "Login"}
             </button>
           </form>
+          {message && <p className="text-success mt-3">{message}</p>}
+          {errors.server && <p className="text-danger mt-3">{errors.server}</p>}
           <div className="mt-3">
             <div>
               {isSignup ? (
