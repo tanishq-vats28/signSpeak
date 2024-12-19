@@ -31,7 +31,10 @@ const start = async () => {
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://roaring-brioche-d6aaca.netlify.app",
+    ],
     credentials: true,
   })
 );

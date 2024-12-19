@@ -2,8 +2,16 @@ const { Server } = require("socket.io");
 
 module.exports.connectToSocket = (server) => {
   const io = new Server(server, {
-    cors: true,
+    cors: {
+      origin: [
+        "http://localhost:5173",
+        "https://roaring-brioche-d6aaca.netlify.app",
+      ],
+      methods: ["GET", "POST"],
+      credentials: true,
+    },
   });
+
   const emailToSocketIdMap = new Map();
   const socketidToEmailMap = new Map();
 
