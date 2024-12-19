@@ -1,0 +1,15 @@
+0 call me
+1 good luck
+2 greetings
+3 hope
+4 i love you
+5 okay
+6 pointing down
+7 pointing up
+8 raised hand
+9 rock on
+10 stop
+11 thumbs down
+12 thumbs up
+13 victory
+14 wish to prosper
