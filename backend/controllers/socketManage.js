@@ -3,7 +3,10 @@ const { Server } = require("socket.io");
 module.exports.connectToSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: ["http://localhost:5173"],
+      origin: [
+        "http://localhost:5173",
+        "https://dancing-phoenix-b5a786.netlify.app",
+      ],
       methods: ["GET", "POST"],
       credentials: true,
     },
