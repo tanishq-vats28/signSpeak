@@ -7,6 +7,7 @@ module.exports.connectToSocket = (server) => {
         "http://localhost:5173",
         "https://dancing-phoenix-b5a786.netlify.app",
         "https://main.d3p2dezvco7qxt.amplifyapp.com",
+        "https://tranquil-wisp-c5f037.netlify.app",
       ],
       methods: ["GET", "POST"],
       credentials: true,
