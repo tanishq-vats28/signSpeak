@@ -34,6 +34,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://dancing-phoenix-b5a786.netlify.app",
+      "https://main.d3p2dezvco7qxt.amplifyapp.com",
     ],
     credentials: true,
   })
