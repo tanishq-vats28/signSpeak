@@ -179,11 +179,12 @@ const RoomPage = () => {
   };
 
   const sendFrameToApi = async (frameBlob) => {
+    console.log("frame is:", frameBlob);
     const formData = new FormData();
     formData.append("frame", frameBlob);
 
     try {
-      const response = await fetch("http://localhost:5000/detect", {
+      const response = await fetch("https://localhost:5000/detect", {
         method: "POST",
         body: formData,
       });

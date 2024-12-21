@@ -7,8 +7,8 @@ from cvzone.HandTrackingModule import HandDetector
 from cvzone.ClassificationModule import Classifier
 
 app = Flask(__name__)
-CORS(app)
 
+CORS(app, resources={r"/*": {"origins": "*"}})  
 detector = HandDetector(maxHands=1)
 classifier = Classifier("model/keras_model.h5", "model/labels.txt")
 
@@ -63,4 +63,5 @@ def detect():
     return jsonify({"text": "No hand detected"})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, ssl_context=('cert.pem', 'key.pem'))
+
