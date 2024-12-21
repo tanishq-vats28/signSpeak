@@ -27,8 +27,8 @@ function User() {
     e.preventDefault();
 
     const url = isSignup
-      ? "http://localhost:4000/user/signup"
-      : "http://localhost:4000/user/login";
+      ? "https://signspeak-backend.onrender.com/user/signup"
+      : "https://signspeak-backend.onrender.com/user/login";
 
     try {
       const { data } = await axios.post(
