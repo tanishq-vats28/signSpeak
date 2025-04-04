@@ -1,0 +1,95 @@
+.user-img {
+  padding: 2rem 0 2rem 2rem;
+  text-align: center;
+}
+
+.user-btn {
+  background-color: #6c757d;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.user-btn:hover {
+  background-color: #5a6268;
+}
+
+.user-img img {
+  width: 100%;
+  height: auto;
+  max-width: 45rem;
+}
+
+.link-text {
+  transition: color 0.2s ease;
+}
+
+.link-text:hover {
+  color: #495057 !important;
+}
+
+@media (max-width: 1200px) {
+  .user-img {
+    padding-left: 1rem;
+  }
+
+  .user-img img {
+    max-width: 40rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .row {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  .user-img {
+    padding: 1rem 0;
+    text-align: center;
+  }
+
+  .user-img img {
+    max-width: 35rem;
+  }
+
+  .mt-4.pt-4 {
+    padding-top: 1rem !important;
+    margin-top: 1rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-img img {
+    max-width: 30rem;
+  }
+
+  .user-btn {
+    width: 100%;
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  .user-img img {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .form-control {
+    font-size: 0.9rem;
+  }
+
+  .form-label {
+    font-size: 0.95rem;
+  }
+
+  .Toastify__toast-container {
+    width: 90% !important;
+    left: 5% !important;
+    bottom: 1rem !important;
+  }
+}

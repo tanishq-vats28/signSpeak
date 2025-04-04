@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "./css/user.css";
 
 function User() {
   const [isSignup, setIsSignup] = useState(false);
@@ -27,8 +28,8 @@ function User() {
     e.preventDefault();
 
     const url = isSignup
-      ? "https://signspeak-backend.onrender.com/user/signup"
-      : "https://signspeak-backend.onrender.com/user/login";
+      ? `${import.meta.env.VITE_BACKEND_URL}/user/signup`
+      : `${import.meta.env.VITE_BACKEND_URL}/user/login`;
 
     try {
       const { data } = await axios.post(
@@ -38,9 +39,7 @@ function User() {
           password,
           ...(isSignup && { username }),
         },
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
 
       const { success, message, user } = data;
@@ -52,14 +51,10 @@ function User() {
             username: user.username,
             email: user.email,
           }),
-          {
-            expires: 1,
-          }
+          { expires: 1 }
         );
         handleSuccess(message);
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1000);
+        setTimeout(() => navigate("/dashboard"), 1000);
       } else {
         handleError(message);
       }
@@ -71,11 +66,11 @@ function User() {
 
   return (
     <div className="container">
-      <div className="row m-5">
-        <div className="col-8 user-img">
-          <img src="images/Designer (6).png" alt="login" />
+      <div className="row m-5 ms-lg-5 ps-lg-5">
+        <div className="col-12 col-lg-8 user-img">
+          <img src="images/Designer (6).png" alt="SignSpeak Interface" />
         </div>
-        <div className="col-4 mt-4 pt-4 text-start">
+        <div className="col-12 col-lg-4 mt-4 pt-4 text-start">
           <form className="mt-3" onSubmit={handleSubmit}>
             {isSignup && (
               <div className="mb-3">

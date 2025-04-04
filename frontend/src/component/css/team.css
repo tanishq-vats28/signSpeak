@@ -1,0 +1,118 @@
+.team-container {
+  margin-top: 8rem;
+  padding: 0 2rem;
+}
+
+.team-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  align-items: center;
+}
+
+.team-profile {
+  max-width: 300px;
+  text-align: center;
+}
+
+.team-profile h4 {
+  font-size: 1.8rem;
+  margin-bottom: 0.3rem;
+}
+
+.team-profile h6 {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.team-profile p {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.team-img {
+  width: 100%;
+  max-width: 280px;
+  height: 280px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.team-icon a {
+  font-size: 1.5rem;
+  color: #2d2d2d;
+  transition: transform 0.2s ease;
+}
+
+.team-icon a:hover {
+  transform: translateY(-2px);
+}
+
+.team-email {
+  font-size: 0.9rem;
+  color: #666;
+  word-break: break-word;
+}
+
+@media (max-width: 992px) {
+  .team-container {
+    margin-top: 5rem;
+    padding: 0 1.5rem;
+  }
+
+  .team-img {
+    max-width: 240px;
+    height: 240px;
+  }
+
+  .team-profile h4 {
+    font-size: 1.6rem;
+  }
+
+  .team-profile h6 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .team-container {
+    margin-top: 4rem;
+    padding: 0 1rem;
+  }
+
+  .team-img {
+    max-width: 200px;
+    height: 200px;
+  }
+
+  .team-profile h4 {
+    font-size: 1.4rem;
+  }
+
+  .team-profile h6 {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .team-container {
+    margin-top: 3rem;
+    padding: 0 0.5rem;
+  }
+
+  .team-img {
+    max-width: 180px;
+    height: 180px;
+  }
+
+  .team-profile p {
+    font-size: 0.9rem;
+  }
+
+  .team-email {
+    font-size: 0.8rem;
+  }
+}

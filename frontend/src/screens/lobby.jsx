@@ -1,11 +1,14 @@
 import React, { useCallback, useState, useEffect } from "react";
 import { useSocket } from "../context/socketProvider";
 import { useNavigate } from "react-router-dom";
+import "../component/css/lobby.css";
+
 function Lobby({ obj }) {
   const [email, setEmail] = useState(obj.email);
   const [room, setRoom] = useState("");
   const socket = useSocket();
   const navigate = useNavigate();
+
   const handleSubmit = useCallback(
     (e) => {
       e.preventDefault();
@@ -13,6 +16,7 @@ function Lobby({ obj }) {
     },
     [email, room, socket]
   );
+
   const handleJoinRoom = useCallback(
     (data) => {
       const { email, room } = data;
@@ -20,24 +24,31 @@ function Lobby({ obj }) {
     },
     [navigate]
   );
+
+  const handleRoomFull = useCallback((data) => {
+    alert(data.message);
+  }, []);
+
   useEffect(() => {
     socket.on("room:join", handleJoinRoom);
+    socket.on("room:full", handleRoomFull);
     return () => {
       socket.off("room:join", handleJoinRoom);
+      socket.off("room:full", handleRoomFull);
     };
-  }, [socket, handleJoinRoom]);
+  }, [socket, handleJoinRoom, handleRoomFull]);
+
   return (
     <div className="container lobby">
       <div className="lobby-header">
         <h3>Hello, {obj.username}</h3>
       </div>
-
       <div className="row lobby-row">
         <div className="col lobby-info">
           <p>Welcome back, {obj.username}!</p>
           <p>Enter your room code to start or join a session.</p>
           <div className="lobby-img">
-            <img src="\images\room-img.webp" />
+            <img src="\images\room-img.webp" alt="Room" />
           </div>
         </div>
         <div className="col lobby-form-container">
@@ -51,9 +62,7 @@ function Lobby({ obj }) {
                 className="form-control"
                 id="email"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                }}
+                onChange={(e) => setEmail(e.target.value)}
                 aria-describedby="emailHelp"
               />
               <div id="emailHelp" className="form-text">
@@ -70,9 +79,7 @@ function Lobby({ obj }) {
                 className="form-control"
                 id="roomCode"
                 value={room}
-                onChange={(e) => {
-                  setRoom(e.target.value);
-                }}
+                onChange={(e) => setRoom(e.target.value)}
               />
               <div className="form-text">
                 Enter code to create or join a room.

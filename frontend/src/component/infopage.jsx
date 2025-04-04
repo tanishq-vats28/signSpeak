@@ -1,9 +1,10 @@
 import React from "react";
+import "./css/info.css";
 function InfoPage() {
   return (
     <div className="container">
-      <div className="row justify-content-between mt-1 ms-4 mb-4 me-4">
-        <div className="col-6 fs-5 mt-5 info-first-col">
+      <div className="row justify-content-between mt-1 ms-lg-4 mb-4 me-lg-4 gx-lg-5 gy-5">
+        <div className="col-12 col-lg-6 fs-5 mt-lg-5 info-first-col">
           <h4>For Deaf/Mute Individuals:</h4>
           <p className="mt-4">
             <b>Accurate Sign Language Recognition:</b> SignSpeak utilizes modern
@@ -22,7 +23,7 @@ function InfoPage() {
             fluent and direct communication.
           </p>
         </div>
-        <div className="col-6 fs-5 mt-5 info-second-col">
+        <div className="col-12 col-lg-6 fs-5 mt-lg-5 info-second-col">
           <h4>For Hearing/Speaking Individuals:</h4>
           <p className="mt-4">
             <b>User-Friendly Interface:</b> SignSpeak is designed to be

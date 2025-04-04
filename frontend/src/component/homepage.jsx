@@ -1,10 +1,11 @@
 import React from "react";
+import "./css/home.css";
 
 function HomePage() {
   return (
-    <div className="container">
-      <div className="row mt-5 ms-5 ps-5">
-        <div className="col-6 hero-first-col">
+    <div className="home-container">
+      <div className="content-row">
+        <div className="hero-first-col">
           <h3>Connect Beyond Boundaries.</h3>
           <h5>SignSpeak: Your Universal Communication Platform.</h5>
           <p className="mt-4">
@@ -22,8 +23,12 @@ function HomePage() {
             for all!
           </p>
         </div>
-        <div className="col-5 hero-img">
-          <img src="images/home2.webp" alt="SignSpeak Platform" />
+        <div className="hero-img">
+          <img
+            src="images/home2.webp"
+            alt="SignSpeak Platform"
+            className="img-fluid"
+          />
         </div>
       </div>
     </div>

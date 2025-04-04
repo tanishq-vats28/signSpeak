@@ -8,10 +8,7 @@ export const useSocket = () => {
 };
 
 export const SocketProvider = (props) => {
-  const socket = useMemo(
-    () => io("https://signspeak-backend.onrender.com"),
-    []
-  );
+  const socket = useMemo(() => io(`${import.meta.env.VITE_BACKEND_URL}`), []);
   return (
     <SocketContext.Provider value={socket}>
       {props.children}

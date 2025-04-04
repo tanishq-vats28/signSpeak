@@ -1,32 +1,35 @@
 import React, { useEffect, useCallback, useState, useRef } from "react";
-import ReactPlayer from "react-player";
 import peer from "../service/peer";
 import { useSocket } from "../context/socketProvider";
 import { useNavigate, useParams } from "react-router-dom";
 import Cookies from "js-cookie";
+import "../component/css/room.css";
 
 const RoomPage = () => {
   const socket = useSocket();
   const { roomId } = useParams();
   const [remoteSocketId, setRemoteSocketId] = useState(null);
-  const [myStream, setMyStream] = useState();
-  const [remoteStream, setRemoteStream] = useState();
+  const [myStream, setMyStream] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [message, setMessage] = useState("");
-  const [chatVisible, setChatVisible] = useState(true);
+
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
   const chatEndRef = useRef(null);
+
   const navigate = useNavigate();
   const userCookie = Cookies.get("user");
   const user = userCookie ? JSON.parse(userCookie) : null;
+
   useEffect(() => {
     if (!user) {
       navigate("/user");
     }
   }, [navigate, user]);
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
+
   const validSigns = [
     "call me",
     "good luck",
@@ -46,63 +49,87 @@ const RoomPage = () => {
   ];
 
   useEffect(() => {
-    socket.on("receiveMessage", (message) => {
-      setChatMessages((prevMessages) => [...prevMessages, message]);
+    socket.on("receiveMessage", (incomingMsg) => {
+      setChatMessages((prev) => [...prev, incomingMsg]);
     });
-    return () => {
-      socket.off("receiveMessage");
-    };
+    return () => socket.off("receiveMessage");
   }, [socket]);
 
+  // ✅ FIXED scroll to bottom without page jump
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = chatEndRef.current?.parentNode;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [chatMessages]);
+
+  useEffect(() => {
+    if (localVideoRef.current && myStream) {
+      localVideoRef.current.srcObject = myStream;
+    }
+  }, [myStream]);
+
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
 
   const handleSendMessage = () => {
     if (message.trim()) {
-      const newMessage = {
-        user: user.username,
-        text: message,
-        room: roomId,
-      };
+      const newMessage = { user: user.username, text: message, room: roomId };
       socket.emit("sendMessage", newMessage);
+      setChatMessages((prev) => [...prev, newMessage]);
       setMessage("");
     }
   };
 
   const handleUserJoined = useCallback(({ email, id }) => {
     setRemoteSocketId(id);
-    setChatVisible(true);
   }, []);
 
   const handleCallUser = useCallback(async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
-    });
-    const offer = await peer.getOffer();
-    socket.emit("user:call", { to: remoteSocketId, offer });
-    setMyStream(stream);
-    setChatVisible(true);
-  }, [remoteSocketId, socket]);
-
-  const handleIncommingCall = useCallback(
-    async ({ from, offer }) => {
-      setRemoteSocketId(from);
+    try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
       });
       setMyStream(stream);
-      const ans = await peer.getAnswer(offer);
-      socket.emit("call:accepted", { to: from, ans });
+      const offer = await peer.getOffer();
+      socket.emit("user:call", { to: remoteSocketId, offer });
+    } catch (err) {
+      console.error("Error accessing media devices:", err);
+    }
+  }, [remoteSocketId, socket]);
+
+  const handleIncommingCall = useCallback(
+    async ({ from, offer }) => {
+      setRemoteSocketId(from);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+        setMyStream(stream);
+        const ans = await peer.getAnswer(offer);
+        socket.emit("call:accepted", { to: from, ans });
+      } catch (err) {
+        console.error("Error during incoming call:", err);
+      }
     },
     [socket]
   );
 
   const sendStreams = useCallback(() => {
-    for (const track of myStream.getTracks()) {
-      peer.peer.addTrack(track, myStream);
+    if (myStream) {
+      for (const track of myStream.getTracks()) {
+        if (!peer.peer.getSenders().find((sender) => sender.track === track)) {
+          peer.peer.addTrack(track, myStream);
+        }
+      }
     }
   }, [myStream]);
 
@@ -115,8 +142,12 @@ const RoomPage = () => {
   );
 
   const handleNegoNeeded = useCallback(async () => {
-    const offer = await peer.getOffer();
-    socket.emit("peer:nego:needed", { offer, to: remoteSocketId });
+    try {
+      const offer = await peer.getOffer();
+      socket.emit("peer:nego:needed", { offer, to: remoteSocketId });
+    } catch (err) {
+      console.error("Negotiation error:", err);
+    }
   }, [remoteSocketId, socket]);
 
   useEffect(() => {
@@ -128,20 +159,27 @@ const RoomPage = () => {
 
   const handleNegoNeedIncomming = useCallback(
     async ({ from, offer }) => {
-      const ans = await peer.getAnswer(offer);
-      socket.emit("peer:nego:done", { to: from, ans });
+      try {
+        const ans = await peer.getAnswer(offer);
+        socket.emit("peer:nego:done", { to: from, ans });
+      } catch (err) {
+        console.error("Negotiation handling error:", err);
+      }
     },
     [socket]
   );
 
   const handleNegoNeedFinal = useCallback(async ({ ans }) => {
-    await peer.setLocalDescription(ans);
+    try {
+      await peer.setLocalDescription(ans);
+    } catch (err) {
+      console.error("Finalizing negotiation error:", err);
+    }
   }, []);
 
   useEffect(() => {
-    peer.peer.addEventListener("track", async (ev) => {
-      const remoteStream = ev.streams;
-      setRemoteStream(remoteStream[0]);
+    peer.peer.addEventListener("track", (ev) => {
+      setRemoteStream(ev.streams[0]);
     });
   }, []);
 
@@ -171,29 +209,23 @@ const RoomPage = () => {
   const endCall = () => {
     myStream?.getTracks().forEach((track) => track.stop());
     remoteStream?.getTracks().forEach((track) => track.stop());
+    socket.emit("room:leave", { room: roomId, email: user.email });
     setMyStream(null);
     setRemoteStream(null);
     setChatMessages([]);
-    setChatVisible(false);
     navigate("/");
   };
 
   const sendFrameToApi = async (frameBlob) => {
-    console.log("frame is:", frameBlob);
     const formData = new FormData();
     formData.append("frame", frameBlob);
-
     try {
-      const response = await fetch(
-        "https://signspeak-mlmodel.onrender.com/detect",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch(`${import.meta.env.VITE_ML_URL}/detect`, {
+        method: "POST",
+        body: formData,
+      });
       const data = await response.json();
       const detectedText = data.text;
-
       if (detectedText && validSigns.includes(detectedText.toLowerCase())) {
         const newMessage = {
           user: user.username || "Anonymous",
@@ -201,7 +233,7 @@ const RoomPage = () => {
           room: roomId,
         };
         socket.emit("sendMessage", newMessage);
-        setChatMessages((prevMessages) => [...prevMessages, newMessage]);
+        setChatMessages((prev) => [...prev, newMessage]);
       }
     } catch (error) {
       console.error("Error sending frame to API:", error);
@@ -211,101 +243,81 @@ const RoomPage = () => {
   useEffect(() => {
     const captureFrame = () => {
       if (myStream) {
-        const video = document.querySelector("video");
+        const video = localVideoRef.current;
         if (video) {
           const canvas = document.createElement("canvas");
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
           const context = canvas.getContext("2d");
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
           canvas.toBlob((blob) => {
             if (blob) sendFrameToApi(blob);
           }, "image/jpeg");
         }
       }
     };
-
     const intervalId = setInterval(captureFrame, 2000);
     return () => clearInterval(intervalId);
   }, [myStream]);
 
   return (
-    <div className="room-container container">
-      <div className="row">
-        <div className="col-6 left-container">
+    <div className="room-container">
+      <div className="room-content">
+        <div className="left-panel">
           <h1 className="room-header">signSpeak</h1>
           <h4 className="room-status">
             {remoteSocketId ? "Connected" : "Waiting for someone to join..."}
           </h4>
 
-          <div className="room-btn">
+          <div className="room-btn-group">
             {myStream && (
-              <button className="btn room-btn-css" onClick={sendStreams}>
+              <button className="room-btn" onClick={sendStreams}>
                 Share Stream
               </button>
             )}
             {remoteSocketId && !myStream && (
-              <button className="btn room-btn-css" onClick={handleCallUser}>
+              <button className="room-btn" onClick={handleCallUser}>
                 Start Call
               </button>
             )}
             {myStream && (
-              <button className="btn room-btn-css" onClick={endCall}>
+              <button className="room-btn" onClick={endCall}>
                 End Call
               </button>
             )}
           </div>
 
-          {chatVisible && (
-            <div className="chat-box">
-              <div className="chat-messages">
-                {chatMessages.map((msg, index) => (
-                  <div key={index} className="chat-message">
-                    <strong>{msg.user}:</strong> {msg.text}
-                  </div>
-                ))}
-                <div ref={chatEndRef}></div>
-              </div>
-              <div className="input">
-                <input
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="message-input"
-                  placeholder="Type your message..."
-                />
-                <button
-                  onClick={handleSendMessage}
-                  className="btn room-btn-css"
-                >
-                  Send
-                </button>
-              </div>
+          <div className="chat-box">
+            <div className="chat-messages">
+              {chatMessages.map((msg, index) => (
+                <div key={index} className="chat-message">
+                  <strong>{msg.user}:</strong> {msg.text}
+                </div>
+              ))}
+              <div ref={chatEndRef}></div>
             </div>
-          )}
+            <div className="chat-input-group">
+              <input
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="message-input"
+                placeholder="Type your message..."
+              />
+              <button onClick={handleSendMessage} className="send-btn">
+                Send
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="col-6 video-container">
-          <div className="video-player">
-            {myStream && (
-              <ReactPlayer
-                url={myStream}
-                width="100%"
-                height="100%"
-                playing
-                muted
-              />
-            )}
-          </div>
-          <div className="video-player">
-            {remoteStream && (
-              <ReactPlayer
-                url={remoteStream}
-                width="100%"
-                height="100%"
-                playing
-              />
-            )}
+        <div className="right-panel">
+          <div className="video-container">
+            <div className="video-player local-video">
+              <video ref={localVideoRef} autoPlay muted />
+            </div>
+            <div className="video-player remote-video">
+              <video ref={remoteVideoRef} autoPlay />
+            </div>
           </div>
         </div>
       </div>

@@ -1,9 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
+import "./css/navbar.css";
 
 function Navbar() {
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleMenu = () => setIsOpen(!isOpen);
 
   const handleLogout = () => {
     Cookies.remove("user");
@@ -13,7 +17,7 @@ function Navbar() {
   const isLoggedIn = Cookies.get("user");
 
   return (
-    <div className="navbar-container">
+    <nav className="navbar-container">
       <div className="logo">
         <Link to="/">
           <img
@@ -23,15 +27,29 @@ function Navbar() {
           />
         </Link>
       </div>
-      <div className="menu">
+
+      <div className="hamburger" onClick={toggleMenu}>
+        <span className="bar"></span>
+        <span className="bar"></span>
+        <span className="bar"></span>
+      </div>
+
+      <div className={`menu ${isOpen ? "active" : ""}`}>
         {isLoggedIn ? (
           <>
-            <Link to="/dashboard" className="nav-item">
+            <Link
+              to="/dashboard"
+              className="nav-item"
+              onClick={() => setIsOpen(false)}
+            >
               <p>Dashboard</p>
             </Link>
             <Link
               to="/"
-              onClick={handleLogout}
+              onClick={() => {
+                handleLogout();
+                setIsOpen(false);
+              }}
               className="nav-item"
               style={{ cursor: "pointer" }}
             >
@@ -40,22 +58,34 @@ function Navbar() {
           </>
         ) : (
           <>
-            <Link to="/" className="nav-item">
+            <Link to="/" className="nav-item" onClick={() => setIsOpen(false)}>
               <p>Home</p>
             </Link>
-            <Link to="/info" className="nav-item">
+            <Link
+              to="/info"
+              className="nav-item"
+              onClick={() => setIsOpen(false)}
+            >
               <p>Info</p>
             </Link>
-            <Link to="/team" className="nav-item">
+            <Link
+              to="/team"
+              className="nav-item"
+              onClick={() => setIsOpen(false)}
+            >
               <p>Team</p>
             </Link>
-            <Link to="/user" className="nav-item">
+            <Link
+              to="/user"
+              className="nav-item"
+              onClick={() => setIsOpen(false)}
+            >
               <p>Login</p>
             </Link>
           </>
         )}
       </div>
-    </div>
+    </nav>
   );
 }
 

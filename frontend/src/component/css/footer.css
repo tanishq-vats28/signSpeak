@@ -1,0 +1,30 @@
+.footer {
+  background-color: rgb(211, 211, 211);
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1.2rem;
+  text-align: center;
+  padding: 0.5rem 0;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+}
+
+.footer p {
+  margin: 0;
+  padding: 0;
+  color: rgba(0, 0, 0);
+}
+
+.footer a {
+  font-weight: bold;
+  color: rgba(0, 0, 0);
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+  }
+}

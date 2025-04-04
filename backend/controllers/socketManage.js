@@ -22,11 +22,26 @@ module.exports.connectToSocket = (server) => {
 
     socket.on("room:join", (data) => {
       const { email, room } = data;
+      // Check the number of clients in the room
+      const clients = io.sockets.adapter.rooms.get(room) || new Set();
+      if (clients.size >= 2) {
+        io.to(socket.id).emit("room:full", {
+          room,
+          message: "Room is full. Only one-to-one calls are allowed.",
+        });
+        return;
+      }
       emailToSocketIdMap.set(email, socket.id);
       socketidToEmailMap.set(socket.id, email);
-      io.to(room).emit("user:joined", { email, id: socket.id });
       socket.join(room);
+      io.to(room).emit("user:joined", { email, id: socket.id });
       io.to(socket.id).emit("room:join", data);
+    });
+
+    socket.on("room:leave", (data) => {
+      const { room } = data;
+      socket.leave(room);
+      console.log(`Socket ${socket.id} left room ${room}`);
     });
 
     socket.on("user:call", ({ to, offer }) => {
@@ -50,7 +65,6 @@ module.exports.connectToSocket = (server) => {
     socket.on("sendMessage", (message) => {
       const { user, text, room } = message;
       console.log(`Message received: ${text} from ${user} in room ${room}`);
-
       socket.to(room).emit("receiveMessage", message);
       io.to(socket.id).emit("receiveMessage", message);
     });
