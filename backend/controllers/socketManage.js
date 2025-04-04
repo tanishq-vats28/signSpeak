@@ -5,7 +5,7 @@ module.exports.connectToSocket = (server) => {
     cors: {
       origin: [
         "http://localhost:5173",
-        "https://zesty-kringle-0d79a3.netlify.app/",
+        "https://zesty-kringle-0d79a3.netlify.app",
       ],
       methods: ["GET", "POST"],
       credentials: true,
