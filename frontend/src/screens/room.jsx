@@ -55,7 +55,6 @@ const RoomPage = () => {
     return () => socket.off("receiveMessage");
   }, [socket]);
 
-  // ✅ FIXED scroll to bottom without page jump
   useEffect(() => {
     const container = chatEndRef.current?.parentNode;
     if (container) {
@@ -82,7 +81,6 @@ const RoomPage = () => {
     if (message.trim()) {
       const newMessage = { user: user.username, text: message, room: roomId };
       socket.emit("sendMessage", newMessage);
-      setChatMessages((prev) => [...prev, newMessage]);
       setMessage("");
     }
   };
@@ -233,7 +231,6 @@ const RoomPage = () => {
           room: roomId,
         };
         socket.emit("sendMessage", newMessage);
-        setChatMessages((prev) => [...prev, newMessage]);
       }
     } catch (error) {
       console.error("Error sending frame to API:", error);
@@ -268,7 +265,6 @@ const RoomPage = () => {
           <h4 className="room-status">
             {remoteSocketId ? "Connected" : "Waiting for someone to join..."}
           </h4>
-
           <div className="room-btn-group">
             {myStream && (
               <button className="room-btn" onClick={sendStreams}>
@@ -286,7 +282,6 @@ const RoomPage = () => {
               </button>
             )}
           </div>
-
           <div className="chat-box">
             <div className="chat-messages">
               {chatMessages.map((msg, index) => (
@@ -309,7 +304,6 @@ const RoomPage = () => {
             </div>
           </div>
         </div>
-
         <div className="right-panel">
           <div className="video-container">
             <div className="video-player local-video">
