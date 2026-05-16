@@ -1,9 +1,11 @@
 import cv2
 import numpy as np
 import math
-from cvzone.HandTrackingModule import HandDetector
+from pathlib import Path
+from hand_detector import HandDetector
+
 cap = cv2.VideoCapture(0)
-detector = HandDetector(maxHands=1)
+detector = HandDetector(Path(__file__).resolve().parent / "model" / "hand_landmarker.task", max_hands=1)
 boundarySize = 20
 imageSize = 300
 folder = "data/stop"
@@ -13,7 +15,7 @@ while True:
     if not success:
         print("Failed to capture image")
         break
-    hands, img = detector.findHands(img)
+    hands, img = detector.find_hands(img)
     if hands:
         hand = hands[0]
         x, y, width, height = hand['bbox']

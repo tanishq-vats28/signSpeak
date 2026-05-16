@@ -65,86 +65,83 @@ function User() {
   };
 
   return (
-    <div className="container">
-      <div className="row m-5 ms-lg-5 ps-lg-5">
-        <div className="col-12 col-lg-8 user-img">
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="user-img">
           <img src="images/Designer (6).png" alt="SignSpeak Interface" />
         </div>
-        <div className="col-12 col-lg-4 mt-4 pt-4 text-start">
-          <form className="mt-3" onSubmit={handleSubmit}>
-            {isSignup && (
-              <div className="mb-3">
-                <label htmlFor="username" className="form-label">
-                  Username
-                </label>
+
+        <div className="auth-form-wrapper">
+          <div className="auth-form-card">
+            <h3>{isSignup ? "Create Account" : "Welcome Back"}</h3>
+            <p className="auth-subtitle">
+              {isSignup
+                ? "Sign up to start using SignSpeak"
+                : "Sign in to continue to SignSpeak"}
+            </p>
+
+            <form onSubmit={handleSubmit}>
+              {isSignup && (
+                <div className="form-group">
+                  <label htmlFor="username">Username</label>
+                  <input
+                    type="text"
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                  />
+                </div>
+              )}
+
+              <div className="form-group">
+                <label htmlFor="email">Email Address</label>
                 <input
-                  type="text"
-                  className="form-control"
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
                 />
               </div>
-            )}
-            <div className="mb-3">
-              <label htmlFor="email" className="form-label">
-                Email address
-              </label>
-              <input
-                type="email"
-                className="form-control"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-              />
+
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                />
+              </div>
+
+              <button type="submit" className="user-btn">
+                {isSignup ? "Create Account" : "Sign In"}
+              </button>
+            </form>
+
+            <div className="auth-switch">
+              {isSignup ? (
+                <p>
+                  Already have an account?{" "}
+                  <span onClick={handleSwitchMode} className="link-text">
+                    Sign In
+                  </span>
+                </p>
+              ) : (
+                <p>
+                  Don't have an account?{" "}
+                  <span onClick={handleSwitchMode} className="link-text">
+                    Create Account
+                  </span>
+                </p>
+              )}
             </div>
-            <div className="mb-3">
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
-              <input
-                type="password"
-                className="form-control"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-              />
-            </div>
-            <button type="submit" className="btn mt-2 user-btn">
-              {isSignup ? "Signup" : "Login"}
-            </button>
-          </form>
-          <div className="mt-3">
-            {isSignup ? (
-              <p>
-                Already have an account? <br />
-                <span
-                  onClick={handleSwitchMode}
-                  className="link-text text-decoration-none text-secondary-emphasis"
-                  style={{ cursor: "pointer" }}
-                >
-                  Login
-                </span>
-              </p>
-            ) : (
-              <p>
-                Don’t have an account? <br />
-                <span
-                  onClick={handleSwitchMode}
-                  className="link-text text-decoration-none text-secondary-emphasis"
-                  style={{ cursor: "pointer" }}
-                >
-                  Create New Account
-                </span>
-              </p>
-            )}
           </div>
-          <ToastContainer />
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

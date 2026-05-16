@@ -1,9 +1,30 @@
-import React, { useEffect, useCallback, useState, useRef } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import peer from "../service/peer";
 import { useSocket } from "../context/socketProvider";
 import { useNavigate, useParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import "../component/css/room.css";
+
+const REQUIRED_STABLE_DETECTIONS = 3;
+const DETECTION_WINDOW_SIZE = 5;
+const SIGN_MESSAGE_COOLDOWN_MS = 5000;
+const VALID_SIGNS = [
+  "call me",
+  "good luck",
+  "greetings",
+  "hope",
+  "i love you",
+  "okay",
+  "pointing down",
+  "pointing up",
+  "raised hand",
+  "rock on",
+  "stop",
+  "thumbs down",
+  "thumbs up",
+  "victory",
+  "wish to prosper",
+];
 
 const RoomPage = () => {
   const socket = useSocket();
@@ -13,10 +34,15 @@ const RoomPage = () => {
   const [remoteStream, setRemoteStream] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [message, setMessage] = useState("");
+  const [detectionStatus, setDetectionStatus] = useState("Sign detection idle");
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const chatEndRef = useRef(null);
+  const detectionWindowRef = useRef([]);
+  const lastSentSignRef = useRef(null);
+  const lastSentAtRef = useRef(0);
+  const isDetectingRef = useRef(false);
 
   const navigate = useNavigate();
   const userCookie = Cookies.get("user");
@@ -27,26 +53,6 @@ const RoomPage = () => {
       navigate("/user");
     }
   }, [navigate, user]);
-
-  if (!user) return null;
-
-  const validSigns = [
-    "call me",
-    "good luck",
-    "greetings",
-    "hope",
-    "i love you",
-    "okay",
-    "pointing down",
-    "pointing up",
-    "raised hand",
-    "rock on",
-    "stop",
-    "thumbs down",
-    "thumbs up",
-    "victory",
-    "wish to prosper",
-  ];
 
   useEffect(() => {
     socket.on("receiveMessage", (incomingMsg) => {
@@ -85,7 +91,7 @@ const RoomPage = () => {
     }
   };
 
-  const handleUserJoined = useCallback(({ email, id }) => {
+  const handleUserJoined = useCallback(({ id }) => {
     setRemoteSocketId(id);
   }, []);
 
@@ -132,7 +138,7 @@ const RoomPage = () => {
   }, [myStream]);
 
   const handleCallAccepted = useCallback(
-    ({ from, ans }) => {
+    ({ ans }) => {
       peer.setLocalDescription(ans);
       sendStreams();
     },
@@ -211,10 +217,40 @@ const RoomPage = () => {
     setMyStream(null);
     setRemoteStream(null);
     setChatMessages([]);
+    setDetectionStatus("Sign detection idle");
+    detectionWindowRef.current = [];
+    lastSentSignRef.current = null;
+    lastSentAtRef.current = 0;
     navigate("/");
   };
 
-  const sendFrameToApi = async (frameBlob) => {
+  const resetDetectionWindow = useCallback((status) => {
+    detectionWindowRef.current = [];
+    setDetectionStatus(status);
+  }, []);
+
+  const getStableSign = useCallback((normalizedText) => {
+    const recentDetections = [
+      ...detectionWindowRef.current,
+      normalizedText,
+    ].slice(-DETECTION_WINDOW_SIZE);
+
+    detectionWindowRef.current = recentDetections;
+
+    const matches = recentDetections.filter((sign) => sign === normalizedText)
+      .length;
+
+    if (matches >= REQUIRED_STABLE_DETECTIONS) {
+      return normalizedText;
+    }
+
+    return null;
+  }, []);
+
+  const sendFrameToApi = useCallback(async (frameBlob) => {
+    if (isDetectingRef.current) return;
+
+    isDetectingRef.current = true;
     const formData = new FormData();
     formData.append("frame", frameBlob);
     try {
@@ -222,20 +258,71 @@ const RoomPage = () => {
         method: "POST",
         body: formData,
       });
+
+      if (!response.ok) {
+        resetDetectionWindow(`Detection request failed (${response.status})`);
+        return;
+      }
+
       const data = await response.json();
-      const detectedText = data.text;
-      if (detectedText && validSigns.includes(detectedText.toLowerCase())) {
+      const detectedText = data.text?.trim();
+      const normalizedText = detectedText?.toLowerCase();
+      const confidence = Number(data.confidence);
+      const confidenceText = Number.isFinite(confidence)
+        ? ` (${Math.round(confidence * 100)}%)`
+        : "";
+
+      if (!data.detected) {
+        resetDetectionWindow(
+          `${detectedText || "No sign detected"}${confidenceText}`
+        );
+        return;
+      }
+
+      if (normalizedText && VALID_SIGNS.includes(normalizedText)) {
+        const stableSign = getStableSign(normalizedText);
+        const stableCount = detectionWindowRef.current.filter(
+          (sign) => sign === normalizedText
+        ).length;
+
+        if (!stableSign) {
+          setDetectionStatus(
+            `Hold sign steady: ${detectedText}${confidenceText} (${stableCount}/${REQUIRED_STABLE_DETECTIONS})`
+          );
+          return;
+        }
+
+        const now = Date.now();
+        const isDuplicateCooldown =
+          lastSentSignRef.current === stableSign &&
+          now - lastSentAtRef.current < SIGN_MESSAGE_COOLDOWN_MS;
+
+        if (isDuplicateCooldown) {
+          setDetectionStatus(`Detected: ${detectedText}${confidenceText}`);
+          return;
+        }
+
+        setDetectionStatus(`Sent: ${detectedText}${confidenceText}`);
         const newMessage = {
-          user: user.username || "Anonymous",
+          user: user?.username || "Anonymous",
           text: detectedText,
           room: roomId,
         };
         socket.emit("sendMessage", newMessage);
+        lastSentSignRef.current = stableSign;
+        lastSentAtRef.current = now;
+        detectionWindowRef.current = [];
+        return;
       }
+
+      resetDetectionWindow(detectedText || "No sign detected");
     } catch (error) {
+      resetDetectionWindow("Detection service unavailable");
       console.error("Error sending frame to API:", error);
+    } finally {
+      isDetectingRef.current = false;
     }
-  };
+  }, [getStableSign, resetDetectionWindow, roomId, socket, user?.username]);
 
   useEffect(() => {
     const captureFrame = () => {
@@ -245,6 +332,7 @@ const RoomPage = () => {
           const canvas = document.createElement("canvas");
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
+          if (!canvas.width || !canvas.height) return;
           const context = canvas.getContext("2d");
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
           canvas.toBlob((blob) => {
@@ -255,7 +343,9 @@ const RoomPage = () => {
     };
     const intervalId = setInterval(captureFrame, 2000);
     return () => clearInterval(intervalId);
-  }, [myStream]);
+  }, [myStream, sendFrameToApi]);
+
+  if (!user) return null;
 
   return (
     <div className="room-container">
@@ -265,6 +355,7 @@ const RoomPage = () => {
           <h4 className="room-status">
             {remoteSocketId ? "Connected" : "Waiting for someone to join..."}
           </h4>
+          <div className="detection-status">{detectionStatus}</div>
           <div className="room-btn-group">
             {myStream && (
               <button className="room-btn" onClick={sendStreams}>

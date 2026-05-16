@@ -15,17 +15,26 @@ const io = connectToSocket(server);
 
 const start = async () => {
   try {
+    if (!MONGO_URL) {
+      throw new Error("MONGO_URL is missing. Add it to backend/.env before starting the server.");
+    }
+
     await mongoose.connect(MONGO_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000,
     });
     console.log("MongoDB is connected successfully");
 
-    server.listen(PORT, () => {
-      console.log(`Server is listening on port ${PORT}`);
+    const port = PORT || 8000;
+    server.listen(port, () => {
+      console.log(`Server is listening on port ${port}`);
     });
   } catch (err) {
-    console.error("Error connecting to MongoDB:", err);
+    console.error("Error connecting to MongoDB:", err.message);
+    if (err.code === "ECONNREFUSED" || err.code === "ENOTFOUND" || err.code === "ETIMEOUT") {
+      console.error(
+        "Check your network/DNS access to MongoDB Atlas and confirm your Atlas IP access list allows this machine."
+      );
+    }
   }
 };
 

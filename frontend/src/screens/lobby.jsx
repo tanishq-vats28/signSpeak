@@ -39,40 +39,39 @@ function Lobby({ obj }) {
   }, [socket, handleJoinRoom, handleRoomFull]);
 
   return (
-    <div className="container lobby">
+    <div className="lobby">
       <div className="lobby-header">
         <h3>Hello, {obj.username}</h3>
       </div>
-      <div className="row lobby-row">
-        <div className="col lobby-info">
+      <div className="lobby-row">
+        <div className="lobby-info">
           <p>Welcome back, {obj.username}!</p>
           <p>Enter your room code to start or join a session.</p>
           <div className="lobby-img">
-            <img src="\images\room-img.webp" alt="Room" />
+            <img src="/images/room-img.webp" alt="Room" />
           </div>
         </div>
-        <div className="col lobby-form-container">
+        <div className="lobby-form-container">
           <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label htmlFor="email" className="form-label">
-                Email address:
+            <div className="form-group">
+              <label htmlFor="lobby-email" className="form-label">
+                Email Address
               </label>
               <input
                 type="email"
                 className="form-control"
-                id="email"
+                id="lobby-email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                aria-describedby="emailHelp"
               />
-              <div id="emailHelp" className="form-text">
+              <div className="form-text">
                 We'll never share your email with anyone else.
               </div>
             </div>
 
-            <div className="mb-3">
+            <div className="form-group">
               <label htmlFor="roomCode" className="form-label">
-                Room code:
+                Room Code
               </label>
               <input
                 type="text"
@@ -80,6 +79,7 @@ function Lobby({ obj }) {
                 id="roomCode"
                 value={room}
                 onChange={(e) => setRoom(e.target.value)}
+                placeholder="Enter room code"
               />
               <div className="form-text">
                 Enter code to create or join a room.
@@ -87,8 +87,8 @@ function Lobby({ obj }) {
             </div>
 
             <div className="join-btn">
-              <button type="submit" className="btn mt-2 user-btn">
-                Join
+              <button type="submit" className="user-btn">
+                Join Room
               </button>
             </div>
           </form>
